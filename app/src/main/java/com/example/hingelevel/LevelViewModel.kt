@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +23,7 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
     private val db = Room.databaseBuilder(
         application,
         AppDatabase::class.java, "level-database"
-    ).build()
+    ).addMigrations(MIGRATION_1_2).build()
 
     private val levelDao = db.levelDao()
 
@@ -51,12 +53,13 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun recordLevel(level: Int, dayAtLevel: Int) {
+    fun recordLevel(level: Int, dayAtLevel: Int, goalLevel: Int?) {
         viewModelScope.launch {
             val newEntry = LevelData(
                 date = LocalDate.now().toEpochDay(),
                 level = level,
-                dayAtLevel = dayAtLevel
+                dayAtLevel = dayAtLevel,
+                goalLevel = goalLevel
             )
             levelDao.insertLevel(newEntry)
 
@@ -64,6 +67,14 @@ class LevelViewModel(application: Application) : AndroidViewModel(application) {
             levelDao.pruneOldData()
 
             loadLevelHistory() // Refresh data after recording
+        }
+    }
+
+    companion object {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE level_data ADD COLUMN goalLevel INTEGER")
+            }
         }
     }
 }

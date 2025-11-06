@@ -15,7 +15,8 @@ import java.time.LocalDate
 data class LevelData(
     @PrimaryKey val date: Long, // Storing LocalDate as Long (epochDay)
     val level: Int,
-    val dayAtLevel: Int
+    val dayAtLevel: Int,
+    val goalLevel: Int? = null
 )
 
 @Dao
@@ -49,7 +50,7 @@ interface LevelDao {
     }
 }
 
-@Database(entities = [LevelData::class], version = 1)
+@Database(entities = [LevelData::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun levelDao(): LevelDao
 }

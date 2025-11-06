@@ -45,12 +45,14 @@ fun LevelTrackerScreen(viewModel: LevelViewModel) {
 
     var currentLevel by remember { mutableStateOf("") }
     var dayAtLevel by remember { mutableStateOf("") }
+    var goalLevel by remember { mutableStateOf("") }
 
     // Initialize fields with the latest data if available
     LaunchedEffect(uiState.latestLevel) {
         uiState.latestLevel?.let {
             currentLevel = it.level.toString()
             dayAtLevel = it.dayAtLevel.toString()
+            goalLevel = it.goalLevel?.toString() ?: ""
         }
     }
 
@@ -79,8 +81,9 @@ fun LevelTrackerScreen(viewModel: LevelViewModel) {
                     Spacer(Modifier.height(8.dp))
                     val latest = uiState.latestLevel
                     if (latest != null) {
+                        val goalText = latest.goalLevel?.let { " of $it" } ?: ""
                         Text(
-                            "Level ${latest.level} (Day ${latest.dayAtLevel})",
+                            "Level ${latest.level} (Day ${latest.dayAtLevel})$goalText",
                             style = MaterialTheme.typography.displaySmall
                         )
                     } else {
@@ -115,6 +118,13 @@ fun LevelTrackerScreen(viewModel: LevelViewModel) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
+                OutlinedTextField(
+                    value = goalLevel,
+                    onValueChange = { goalLevel = it },
+                    label = { Text("Goal Level") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -123,8 +133,9 @@ fun LevelTrackerScreen(viewModel: LevelViewModel) {
                 onClick = {
                     val levelInt = currentLevel.toIntOrNull()
                     val dayInt = dayAtLevel.toIntOrNull()
+                    val goalInt = goalLevel.toIntOrNull()
                     if (levelInt != null && dayInt != null) {
-                        viewModel.recordLevel(levelInt, dayInt)
+                        viewModel.recordLevel(levelInt, dayInt, goalInt)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -182,8 +193,9 @@ fun HistoryRow(date: LocalDate, data: LevelData?) {
         }
 
         if (data != null) {
+            val goalText = data.goalLevel?.let { " of $it" } ?: ""
             Text(
-                text = "Lvl: ${data.level}, Day: ${data.dayAtLevel}",
+                text = "Lvl: ${data.level}, Day: ${data.dayAtLevel}$goalText",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.End,
                 fontSize = 18.sp
